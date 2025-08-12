@@ -1,0 +1,141 @@
+{% extends 'base.html' %}
+{% block content %}
+{% for product in cart_products %}	
+{% if cart_products %}
+         <section class="h-100 h-custom py-5" style="background-color: #eee;">
+		  <div class="container py-5 h-100">
+			<div class="row d-flex justify-content-center align-items-center h-100">
+			  <div class="col">
+			
+
+
+				<div class="card">
+				  <div class="card-body p-4">
+						<div class="card mb-3">
+						  <div class="card-body">
+							<div class="d-flex justify-content-between">
+							  <div class="d-flex flex-row align-items-center">
+								<div>
+								  <img
+									src="{{ product.image.url }}"
+									class="img-fluid rounded-3" alt="Shopping item" style="width: 65px;">
+								</div>
+								<div class="ms-3">
+								  <h5>{{ product.name }}</h5>
+								  <p class="small mb-0">lorem ipsum</p>
+								</div>
+						    </div>
+							  <div class="d-flex flex-row align-items-center">
+								<div style="width: 50px;">
+								  <select class="form-select form-select-sm" id="select{{product.id}}">
+                  
+                                    {% for key, value in quantities.items %}
+                                        {% if key == product.id|slugify %}
+                                    <option selected>{{ value }}</option>
+                                        {% endif %}
+                                    {% endfor %}
+                                                
+
+                                        <option value="1">1</option>
+                                        <option value="2">2</option>
+                                        <option value="3">3</option>
+                                        <option value="4">4</option>
+                                        <option value="5">5</option>
+                                        </select>
+								</div>
+								<div style="width: 80px;">
+								  <h5 class="mb-0"> ${{ product.price }}</h5>
+								</div>
+                                <button type="button" data-index="{{product.id}}"><i class="fa-solid fa-trash"></i></button>
+                                <button type="button" data-index="{{product.id}}"><i class="fa-solid fa-rotate-right"></i></button>
+							  </div>
+							</div>
+						  </div>
+						</div>
+					{% endfor %}
+					<div align="right">
+					<h3>Total: ${{ totals }}</h3>
+					<a href="{% url 'checkout' %}" class="btn btn-success">Checkout</a>
+
+					</div>
+					<br/><br/><br/>
+					{% else %}
+					<div>
+					There's Nothing In Your Cart...
+					<br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/>
+				{% endif %}
+					</div>
+
+				  </div>
+				</div>
+			  </div>
+			</div>
+		</div>
+        </section>
+		<script>
+// Update Cart
+$(document).on('click', '.update-cart', function(e){
+    e.preventDefault();
+    // grab the product id
+    var productid = $(this).data('index');
+
+    $.ajax({
+    type: 'POST',
+    url: '{% url 'cart_update' %}',
+    data: {
+      product_id: $(this).data('index'),
+      product_qty: $('#select' + productid + ' option:selected').text(),
+      csrfmiddlewaretoken: '{{ csrf_token }}',
+      action: 'post'
+    },
+    success: function(json){
+        //console.log(json)
+        //document.getElementById("cart_quantity").textContent = json.qty
+        location.reload();
+    },
+
+    error: function(xhr, errmsg, err){
+
+    }
+
+
+    });
+
+})
+
+// Delete Item From Cart
+$(document).on('click', '.delete-product', function(e){
+    e.preventDefault();
+    // grab the product id
+    //var productid = $(this).data('index');
+
+    $.ajax({
+    type: 'POST',
+    url: '{% url 'cart_delete' %}',
+    data: {
+      product_id: $(this).data('index'),
+      csrfmiddlewaretoken: '{{ csrf_token }}',
+      action: 'post'
+    },
+    success: function(json){
+        //console.log(json)
+        //document.getElementById("cart_quantity").textContent = json.qty
+        location.reload();
+    },
+
+    error: function(xhr, errmsg, err){
+
+    }
+
+
+    });
+
+})
+
+
+
+
+</script>
+
+
+{% endblock %}
