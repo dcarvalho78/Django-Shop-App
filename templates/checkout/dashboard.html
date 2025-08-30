@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container dashboard-container py-4">
+  <h2 class="mb-4 d-flex align-items-center gap-2">
+    <i class="bi-speedometer2"></i>
+    My Dashboard
+  </h2>
+
+  <!-- KPI cards -->
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+      <div class="card dashboard-kpi h-100 shadow-sm">
+        <div class="card-body">
+          <div class="text-muted small">Total Orders</div>
+          <div class="fs-4 fw-semibold">{{ kpis.total_count }}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-6 col-md-3">
+      <div class="card dashboard-kpi h-100 shadow-sm">
+        <div class="card-body">
+          <div class="text-muted small">Shipped</div>
+          <div class="fs-4 fw-semibold text-success">{{ kpis.shipped_count }}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-6 col-md-3">
+      <div class="card dashboard-kpi h-100 shadow-sm">
+        <div class="card-body">
+          <div class="text-muted small">Not Shipped</div>
+          <div class="fs-4 fw-semibold text-danger">{{ kpis.unshipped_count }}</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-6 col-md-3">
+      <div class="card dashboard-kpi h-100 shadow-sm">
+        <div class="card-body">
+          <div class="text-muted small">Last Order</div>
+          <div class="fs-6">
+            {% if kpis.last_order %}
+              {{ kpis.last_order|date:"Y-m-d H:i" }}
+            {% else %}
+              —
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Orders table -->
+  <div class="card dashboard-table shadow-sm">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <span class="fw-semibold d-flex align-items-center gap-2">
+        <i class="bi-receipt"></i> Orders
+      </span>
+      <span class="text-muted small">
+        Total amount: <span class="fw-semibold">{{ kpis.total_amount|floatformat:2 }}</span>
+      </span>
+    </div>
+    <div class="table-responsive">
+      <table class="table align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th scope="col">#</th>
+            <th scope="col">Date</th>
+            <th scope="col">Name</th>
+            <th scope="col">Email</th>
+            <th scope="col" class="text-end">Amount</th>
+            <th scope="col">Shipped</th>
+            <th scope="col"></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% if orders %}
+            {% for o in orders %}
+              <tr>
+                <td>{{ o.id }}</td>
+                <td>{{ o.date_ordered|date:"Y-m-d H:i" }}</td>
+                <td>{{ o.full_name }}</td>
+                <td>{{ o.email }}</td>
+                <td class="text-end">{{ o.amount_paid|floatformat:2 }}</td>
+                <td>
+                  {% if o.shipped %}
+                    <span class="badge bg-success"><i class="bi-check2 me-1"></i>Yes</span>
+                  {% else %}
+                    <span class="badge bg-secondary"><i class="bi-x me-1"></i>No</span>
+                  {% endif %}
+                </td>
+                <td>
+                  <a href="{% url 'checkout:my_order_detail' o.id %}"
+                     class="btn btn-sm btn-outline-primary dashboard-detail-btn">
+                    <i class="bi-eye me-1"></i> Details
+                  </a>
+                </td>
+              </tr>
+            {% endfor %}
+          {% else %}
+            <tr>
+              <td colspan="7" class="text-center text-muted py-4">No orders yet.</td>
+            </tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

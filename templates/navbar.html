@@ -1,0 +1,111 @@
+{% load static %}
+<nav class="navbar navbar-expand-lg sticky-top navbar-light bg-light">
+  <div class="container">
+    <a class="navbar-brand d-flex align-items-center gap-2" href="{% url 'home' %}">
+      <img src="{% static 'img/logo.png' %}" alt="Logo" style="height:40px;">
+      <span class="fw-semibold d-none d-sm-inline text-dark">Woodware</span>
+    </a>
+
+    <button class="navbar-toggler" type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent"
+            aria-expanded="false"
+            aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <!-- left: navigation -->
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-4">
+        {% if user.is_authenticated %}
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'checkout:dashboard' %}">
+              <i class="bi-speedometer2 me-1"></i> Dashboard
+            </a>
+          </li>
+        {% endif %}
+      </ul>
+
+      <!-- right: user + cart -->
+      <ul class="navbar-nav mb-2 mb-lg-0 align-items-center gap-2">
+
+        {% if user.is_authenticated %}
+          <!-- User dropdown -->
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="userMenu"
+               role="button" data-bs-toggle="dropdown" aria-expanded="false">
+              <i class="bi-person-circle me-2"></i>
+              <span class="d-none d-sm-inline">
+                {{ user.first_name|default:user.username }}
+              </span>
+            </a>
+            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userMenu">
+              <li>
+                <a class="dropdown-item" href="{% url 'checkout:dashboard' %}">
+                  <i class="bi-grid me-2"></i> Mein Dashboard
+                </a>
+              </li>
+              <li>
+                <a class="dropdown-item" href="{% url 'checkout:my_orders' %}">
+                  <i class="bi-receipt-cutoff me-2"></i> Meine Bestellungen
+                </a>
+              </li>
+              <li><hr class="dropdown-divider"></li>
+              <li class="px-3 pb-2">
+                <form method="post" action="{% url 'logout' %}">
+                  {% csrf_token %}
+                  <input type="hidden" name="next" value="{{ request.path }}">
+                  <button type="submit" class="btn btn-sm btn-outline-danger w-100">
+                    <i class="bi-box-arrow-right me-1"></i> Logout
+                  </button>
+                </form>
+              </li>
+            </ul>
+          </li>
+        {% else %}
+          <li class="nav-item">
+            <a class="btn btn-outline-primary"
+               href="{% url 'login' %}?next={{ request.path|urlencode }}">
+              <i class="bi-box-arrow-in-right me-1"></i> Login
+            </a>
+          </li>
+        {% endif %}
+
+        <!-- Cart -->
+        <li class="nav-item">
+          <a class="btn btn-outline-dark position-relative"
+             data-bs-toggle="offcanvas"
+             href="#offcanvasCart"
+             role="button"
+             aria-controls="offcanvasCart">
+            <i class="bi-cart me-1"></i>
+            <span class="badge bg-dark text-white ms-1 rounded-pill position-absolute top-0 start-100 translate-middle"
+                  id="cart_quantity">
+              {{ cart|length }}
+            </span>
+          </a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<!-- Offcanvas Cart -->
+<div class="offcanvas offcanvas-end" id="offcanvasCart" tabindex="-1"
+     aria-labelledby="offcanvasCartLabel" role="dialog">
+  <div class="offcanvas-header border-bottom">
+    <h6 class="offcanvas-title" id="offcanvasCartLabel">
+      Your Cart <span class="text-muted">(<span id="mini-cart-count">{{ cart|length }}</span>)</span>
+    </h6>
+    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+  </div>
+
+  <div id="mini-cart-body" class="offcanvas-body">
+    {% include 'cart/_mini_cart_items.html' with quants=cart.get_quants %}
+  </div>
+
+  <div id="mini-cart-footer" class="border-top">
+    {% include 'cart/_mini_cart_footer.html' %}
+  </div>
+</div>

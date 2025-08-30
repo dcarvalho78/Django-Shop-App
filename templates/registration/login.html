@@ -1,0 +1,95 @@
+{# store/templates/registration/login.html #}
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container auth-container py-5">
+  <div class="row justify-content-center">
+    <div class="col-md-6 col-lg-5">
+      <div class="card auth-card shadow-sm">
+
+        <div class="card-header auth-header">
+          <h5 class="mb-0 d-flex align-items-center gap-2">
+            <i class="bi-person-circle"></i>
+            Login
+          </h5>
+        </div>
+
+        <div class="card-body">
+
+          {% if form.non_field_errors %}
+            <div class="alert alert-danger mb-3">
+              {% for e in form.non_field_errors %}{{ e }}{% endfor %}
+            </div>
+          {% endif %}
+
+          <form method="post" action="{% url 'login' %}" novalidate>
+            {% csrf_token %}
+
+            <div class="mb-3">
+              <label class="form-label visually-hidden" for="id_username">E-Mail</label>
+              <input type="email"
+                     name="username"
+                     id="id_username"
+                     class="form-control auth-input"
+                     placeholder="E-Mail-Adresse"
+                     autocomplete="email"
+                     value="{{ form.username.value|default_if_none:'' }}">
+              {% if form.username.errors %}
+                <div class="text-danger small mt-1">{{ form.username.errors|striptags }}</div>
+              {% endif %}
+            </div>
+
+            <div class="mb-2">
+              <label class="form-label visually-hidden" for="id_password">Passwort</label>
+              <div class="input-group">
+                <input type="password"
+                       name="password"
+                       id="id_password"
+                       class="form-control auth-input"
+                       placeholder="Passwort"
+                       autocomplete="current-password">
+                <button type="button" class="btn btn-outline-secondary auth-toggle" data-target="#id_password" aria-label="Passwort anzeigen/ausblenden">
+                  <i class="bi-eye"></i>
+                </button>
+              </div>
+              {% if form.password.errors %}
+                <div class="text-danger small mt-1">{{ form.password.errors|striptags }}</div>
+              {% endif %}
+            </div>
+
+            <input type="hidden" name="{{ redirect_field_name|default:'next' }}" value="{{ next|default:'/' }}">
+
+            <div class="d-grid mt-4">
+              <button class="btn btn-primary auth-submit w-100" type="submit">
+                <i class="bi-box-arrow-in-right me-2"></i> Login
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <p class="text-center mt-3">
+        <a class="auth-muted-link" href="{% url 'password_reset' %}">
+          <i class="bi-key me-1"></i> Passwort vergessen?
+        </a>
+      </p>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+  document.querySelectorAll('.auth-toggle').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      const target = document.querySelector(this.getAttribute('data-target'));
+      if (!target) return;
+      const isPw = target.getAttribute('type') === 'password';
+      target.setAttribute('type', isPw ? 'text' : 'password');
+      const icon = this.querySelector('i');
+      if (icon) icon.className = isPw ? 'bi-eye-slash' : 'bi-eye';
+    });
+  });
+});
+</script>
+{% endblock %}

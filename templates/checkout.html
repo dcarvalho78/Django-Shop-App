@@ -1,0 +1,195 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container checkout-container py-4">
+
+  <!-- Flash-Messages -->
+  {% if messages %}
+    <div class="mb-3">
+      {% for m in messages %}
+        <div class="alert alert-{{ m.tags|default:'info' }} mb-2" role="alert">{{ m }}</div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <div class="row g-4">
+    <!-- Left: Shipping form -->
+    <div class="col-lg-7">
+      <div class="card checkout-card shadow-sm">
+        <div class="card-header checkout-card-header">
+          <h5 class="mb-0"><i class="bi-truck me-2"></i> Shipping details</h5>
+        </div>
+        <div class="card-body">
+          <form method="post" action="{% url 'checkout:process_order' %}">
+            {% csrf_token %}
+
+            {% if shipping_form.non_field_errors %}
+              <div class="alert alert-danger">
+                {{ shipping_form.non_field_errors }}
+              </div>
+            {% endif %}
+
+            <div class="row g-3">
+              <div class="col-md-6 checkout-form-field">
+                {{ shipping_form.shipping_first_name }}
+                <div class="invalid-feedback d-block">{{ shipping_form.shipping_first_name.errors }}</div>
+              </div>
+              <div class="col-md-6 checkout-form-field">
+                {{ shipping_form.shipping_last_name }}
+                <div class="invalid-feedback d-block">{{ shipping_form.shipping_last_name.errors }}</div>
+              </div>
+
+              <div class="col-12 checkout-form-field">
+                {{ shipping_form.shipping_email }}
+                <div class="invalid-feedback d-block">{{ shipping_form.shipping_email.errors }}</div>
+              </div>
+
+              <div class="col-12 checkout-form-field">
+                {{ shipping_form.shipping_address1 }}
+                <div class="invalid-feedback d-block">{{ shipping_form.shipping_address1.errors }}</div>
+              </div>
+              <div class="col-12 checkout-form-field">
+                {{ shipping_form.shipping_address2 }}
+                <div class="invalid-feedback d-block">{{ shipping_form.shipping_address2.errors }}</div>
+              </div>
+
+              <div class="col-md-6 checkout-form-field">
+                {{ shipping_form.shipping_city }}
+                <div class="invalid-feedback d-block">{{ shipping_form.shipping_city.errors }}</div>
+              </div>
+              <div class="col-md-6 checkout-form-field">
+                {{ shipping_form.shipping_state }}
+                <div class="invalid-feedback d-block">{{ shipping_form.shipping_state.errors }}</div>
+              </div>
+
+              <div class="col-md-6 checkout-form-field">
+                {{ shipping_form.shipping_zipcode }}
+                <div class="invalid-feedback d-block">{{ shipping_form.shipping_zipcode.errors }}</div>
+              </div>
+              <div class="col-md-6 checkout-form-field">
+                {{ shipping_form.shipping_country }}
+                <div class="invalid-feedback d-block">{{ shipping_form.shipping_country.errors }}</div>
+              </div>
+            </div>
+
+            <hr class="my-4">
+
+            {% with p1e=shipping_form.account_password1.errors p2e=shipping_form.account_password2.errors %}
+              <div class="form-check mb-3">
+                <input class="form-check-input" type="checkbox" id="createAccountToggle"
+                       {% if p1e or p2e %}checked{% endif %}>
+                <label class="form-check-label" for="createAccountToggle">
+                  <i class="bi-person-plus me-1"></i> Create an account with this order (optional)
+                </label>
+              </div>
+
+              <div id="accountFields" class="row g-3 {% if p1e or p2e %}{% else %}d-none{% endif %}">
+                <div class="col-md-6 checkout-form-field">
+                  {{ shipping_form.account_password1 }}
+                  <div class="invalid-feedback d-block">{{ shipping_form.account_password1.errors }}</div>
+                </div>
+                <div class="col-md-6 checkout-form-field">
+                  {{ shipping_form.account_password2 }}
+                  <div class="invalid-feedback d-block">{{ shipping_form.account_password2.errors }}</div>
+                </div>
+              </div>
+            {% endwith %}
+
+            <div class="d-grid mt-4">
+              {% if cart_products %}
+                <button type="submit" class="btn btn-primary btn-lg checkout-btn">
+                  <i class="bi-bag-check me-2"></i> Buy now
+                </button>
+              {% else %}
+                <button type="button" class="btn btn-secondary btn-lg" disabled>Cart is empty</button>
+              {% endif %}
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: Order summary -->
+    <div class="col-lg-5">
+      <div class="card checkout-card shadow-sm">
+        <div class="card-header checkout-card-header">
+          <h5 class="mb-0"><i class="bi-receipt me-2"></i> Order summary</h5>
+        </div>
+        <div class="card-body">
+          {% if cart_products %}
+            <ul class="list-group list-group-flush checkout-summary-list">
+              {% for product in cart_products %}
+                <li class="list-group-item d-flex align-items-center checkout-summary-item">
+                  <img
+                    src="{{ product.image.url }}"
+                    alt="{{ product.name }}"
+                    class="rounded me-3 checkout-summary-img"
+                  >
+                  <div class="flex-grow-1">
+                    <div class="fw-semibold">{{ product.name }}</div>
+                    <div class="text-muted small">
+                      {% for pid, q in quantities.items %}
+                        {% if pid|stringformat:"s" == product.id|stringformat:"s" %}
+                          Qty: {{ q }}
+                        {% endif %}
+                      {% endfor %}
+                    </div>
+                  </div>
+                  <div class="text-end">
+                    {% if product.is_sale %}
+                      <div class="fw-semibold text-danger">{{ product.sale_price }}</div>
+                      <div class="text-decoration-line-through small text-muted">{{ product.price }}</div>
+                    {% else %}
+                      <div class="fw-semibold">{{ product.price }}</div>
+                    {% endif %}
+                  </div>
+                </li>
+              {% endfor %}
+            </ul>
+
+            <div class="mt-3 checkout-totals">
+              <div class="d-flex justify-content-between">
+                <span class="text-muted">Subtotal</span>
+                <span>{{ totals }}</span>
+              </div>
+              <div class="d-flex justify-content-between">
+                <span class="text-muted">Shipping</span>
+                <span>—</span>
+              </div>
+              <hr>
+              <div class="d-flex justify-content-between fw-bold">
+                <span>Total</span>
+                <span>{{ totals }}</span>
+              </div>
+            </div>
+          {% else %}
+            <p class="mb-0">Your cart is empty.</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Toggle-Script für Passwortfelder -->
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+  const toggle = document.getElementById('createAccountToggle');
+  const box = document.getElementById('accountFields');
+  if (toggle && box) {
+    toggle.addEventListener('change', function(){
+      if (this.checked) {
+        box.classList.remove('d-none');
+      } else {
+        box.classList.add('d-none');
+        const p1 = document.getElementById('{{ shipping_form.account_password1.id_for_label }}');
+        const p2 = document.getElementById('{{ shipping_form.account_password2.id_for_label }}');
+        if (p1) p1.value = '';
+        if (p2) p2.value = '';
+      }
+    });
+  }
+});
+</script>
+{% endblock %}

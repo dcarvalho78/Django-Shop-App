@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+{% block title %}Order #{{ order.id }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <h3 class="mb-3">Order #{{ order.id }}</h3>
+
+  <div class="row g-4">
+    <div class="col-lg-6">
+      <div class="card">
+        <div class="card-header">Order Info</div>
+        <div class="card-body">
+          <p class="mb-1"><strong>Date:</strong> {{ order.date_ordered|date:"Y-m-d H:i" }}</p>
+          <p class="mb-1"><strong>Status:</strong> {{ order.get_status_display|default:order.status }}</p>
+          <p class="mb-1"><strong>Shipped:</strong>
+            {% if order.shipped %}Yes ({{ order.date_shipped|date:"Y-m-d" }}){% else %}No{% endif %}
+          </p>
+          <p class="mb-0"><strong>Amount:</strong> {{ order.amount_paid }}</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-6">
+      <div class="card">
+        <div class="card-header">Shipping Address</div>
+        <div class="card-body">
+          {% with s=order.shipping_address %}
+            <div>{{ s.shipping_first_name }} {{ s.shipping_last_name }}</div>
+            <div>{{ s.shipping_address1 }}{% if s.shipping_address2 %}, {{ s.shipping_address2 }}{% endif %}</div>
+            <div>{{ s.shipping_zipcode }} {{ s.shipping_city }}</div>
+            <div>{{ s.shipping_state }}</div>
+            <div>{{ s.shipping_country }}</div>
+            <div class="text-muted">{{ s.shipping_email }}</div>
+          {% endwith %}
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header">Items</div>
+        <div class="card-body table-responsive">
+          <table class="table align-middle">
+            <thead>
+              <tr>
+                <th>Product</th>
+                <th>Qty</th>
+                <th>Price</th>
+                <th>Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for it in items %}
+                <tr>
+                  <td>{{ it.product.title }}</td>
+                  <td>{{ it.quantity }}</td>
+                  <td>{{ it.price }}</td>
+                  <td>{{ it.total_price }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12">
+      <a class="btn btn-outline-secondary" href="{% url 'checkout:my_orders' %}">Back to My Orders</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

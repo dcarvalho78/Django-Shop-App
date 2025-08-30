@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<section class="py-5">
+  <div class="container px-4 px-lg-5 my-4">
+    <div class="row gx-4 gx-lg-5 align-items-center">
+      
+      <!-- Bild -->
+      <div class="col-md-6 mb-4 mb-md-0">
+        <img class="img-fluid rounded shadow-sm" src="{{ product.image.url }}" alt="{{ product.name }}">
+      </div>
+
+      <!-- Infos -->
+      <div class="col-md-6">
+        {% if category %}
+          <div class="small text-muted mb-2">{{ category.name }}</div>
+        {% endif %}
+
+        <h1 class="display-5 fw-bold mb-3">{{ product.name }}</h1>
+
+        <div class="fs-4 mb-4">
+          {% if product.is_sale %}
+            <span class="text-muted text-decoration-line-through">${{ product.price }}</span>
+            &nbsp;<span class="fw-semibold text-danger">${{ product.sale_price }}</span>
+          {% else %}
+            <span class="fw-semibold">${{ product.price }}</span>
+          {% endif %}
+        </div>
+
+        {% if product.description %}
+          <p class="lead mb-4">{{ product.description }}</p>
+        {% endif %}
+
+        <!-- Buttons -->
+        <div class="d-flex gap-2">
+          <button
+            class="btn btn-outline-dark add-to-cart d-flex align-items-center"
+            data-product-id="{{ product.id }}"
+            data-add-url="{% url 'cart:add' %}">
+            <i class="bi-cart me-2"></i> Add to cart
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+{% endblock %}

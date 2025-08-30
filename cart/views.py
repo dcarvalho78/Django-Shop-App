@@ -1,69 +1,87 @@
-from django.shortcuts import render, get_object_or_404
+# cart/views.py
+from django.shortcuts import render, get_object_or_404, redirect
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST, require_http_methods
+from django.template.loader import render_to_string
+
 from .cart import Cart
 from store.models import Product
-from django.http import JsonResponse
-from django.contrib import messages
+
 
 def cart_summary(request):
-	# Get the cart
-	cart = Cart(request)
-	cart_products = cart.get_prods
-	quantities = cart.get_quants
-	totals = cart.cart_total()
-	return render(request, "cart_summary.html", {"cart_products":cart_products, "quantities":quantities, "totals":totals})
+    cart = Cart(request)
+    context = {
+        "cart": cart,
+        "cart_products": cart.get_prods(),   # optional nutzbar im Template
+        "quantities": cart.get_quants(),
+        "totals": cart.cart_total(),
+    }
+    return render(request, "cart_summary.html", context)
 
 
+# ---- interne Helper zum Rendern der Offcanvas-Fragmente ----
+def _mini_fragments(request, cart: Cart):
+    ctx = {
+        "cart": cart,
+        "quants": cart.get_quants(),
+        "totals": cart.cart_total(),
+    }
+    body_html = render_to_string("cart/_mini_cart_items.html", ctx, request=request)
+    footer_html = render_to_string("cart/_mini_cart_footer.html", ctx, request=request)
+    return {"body": body_html, "footer": footer_html, "qty": len(cart)}
 
 
+@require_POST
 def cart_add(request):
-	# Get the cart
-	cart = Cart(request)
-	# test for POST
-	if request.POST.get('action') == 'post':
-		# Get stuff
-		product_id = int(request.POST.get('product_id'))
-		product_qty = int(request.POST.get('product_qty'))
+    # erwartet: product_id, product_qty, action='post'
+    if request.POST.get('action') != 'post':
+        return JsonResponse({"error": "bad action"}, status=400)
 
-		# lookup product in DB
-		product = get_object_or_404(Product, id=product_id)
-		
-		# Save to session
-		cart.add(product=product, quantity=product_qty)
+    try:
+        product_id = int(request.POST.get('product_id'))
+        product_qty = int(request.POST.get('product_qty', 1))
+    except (TypeError, ValueError):
+        return JsonResponse({"error": "bad params"}, status=400)
 
-		# Get Cart Quantity
-		cart_quantity = cart.__len__()
+    cart = Cart(request)
+    product = get_object_or_404(Product, id=product_id)
+    cart.add(product=product, quantity=product_qty)
 
-		# Return resonse
-		# response = JsonResponse({'Product Name: ': product.name})
-		response = JsonResponse({'qty': cart_quantity})
-		#messages.success(request, ("Product Added To Cart..."))
-		return response
+    return JsonResponse(_mini_fragments(request, cart))
 
+
+@require_http_methods(["POST", "GET"])
 def cart_delete(request):
-	cart = Cart(request)
-	if request.POST.get('action') == 'post':
-		# Get stuff
-		product_id = int(request.POST.get('product_id'))
-		# Call delete Function in Cart
-		cart.delete(product=product_id)
+    # AJAX (POST) oder Fallback-Link (GET ?product_id=..)
+    pid = request.POST.get('product_id') if request.method == "POST" else request.GET.get('product_id')
+    try:
+        product_id = int(pid)
+    except (TypeError, ValueError):
+        if request.method == "POST":
+            return JsonResponse({"error": "bad product_id"}, status=400)
+        return redirect("cart_summary")
 
-		response = JsonResponse({'product':product_id})
-		#return redirect('cart_summary')
-		#messages.success(request, ("Item Deleted From Shopping Cart..."))
-		return response
+    cart = Cart(request)
+    cart.delete(product=product_id)
+
+    if request.method == "POST":
+        return JsonResponse(_mini_fragments(request, cart))
+    return redirect("cart_summary")
 
 
+@require_POST
 def cart_update(request):
-	cart = Cart(request)
-	if request.POST.get('action') == 'post':
-		# Get stuff
-		product_id = int(request.POST.get('product_id'))
-		product_qty = int(request.POST.get('product_qty'))
+    # erwartet: product_id, product_qty, action='post'
+    if request.POST.get('action') != 'post':
+        return JsonResponse({"error": "bad action"}, status=400)
 
-		cart.update(product=product_id, quantity=product_qty)
+    try:
+        product_id = int(request.POST.get('product_id'))
+        product_qty = int(request.POST.get('product_qty'))
+    except (TypeError, ValueError):
+        return JsonResponse({"error": "bad params"}, status=400)
 
-		response = JsonResponse({'qty':product_qty})
-		#return redirect('cart_summary')
-		#messages.success(request, ("Your Cart Has Been Updated..."))
-		return response
+    cart = Cart(request)
+    cart.update(product=product_id, quantity=product_qty)
 
+    return JsonResponse(_mini_fragments(request, cart))

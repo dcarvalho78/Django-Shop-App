@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+  <!-- Hero/Header aus Entwurf -->
+  <header class="hero py-5">
+    <div class="container py-5">
+      <div class="text-center text-white">
+        <span class="badge-soft d-inline-flex align-items-center gap-2 mb-3">
+          <i class="bi-leaf"></i>
+          Crafted wood goods
+        </span>
+        <h1 class="display-4 fw-bold">Woodware</h1>
+        <p class="lead text-white-50 mb-4">Hand-picked pieces for your home &amp; studio</p>
+        <a href="#catalog" class="btn btn-light btn-lg px-4 rounded-pill">
+          <i class="bi-shop me-2"></i> Shop now
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Produkte -->
+  <section id="catalog" class="py-5">
+    <div class="container px-4 px-lg-5 mt-5">
+      <div class="row gx-4 gx-lg-5 row-cols-2 row-cols-md-3 row-cols-xl-4 g-4">
+
+        {% for product in products %}
+          {% if product.is_sale %}
+            <!-- SALE Karte -->
+            <div class="col">
+              <div class="card product-card h-100 position-relative">
+                <span class="badge bg-dark position-absolute" style="top:.75rem; right:.75rem;">Sale</span>
+
+                <img class="card-img-top" src="{{ product.image.url }}" alt="{{ product.name }}">
+
+                <div class="card-body p-4">
+                  <div class="text-center">
+                    <h5 class="fw-semibold mb-2">{{ product.name }}</h5>
+
+                    <div class="d-flex justify-content-center align-items-center gap-2 small text-warning mb-2">
+                      <i class="bi-star-fill"></i>
+                      <span>Sale!</span>
+                      <i class="bi-star-fill"></i>
+                    </div>
+
+                    <div class="price-tag">
+                      <span class="text-muted text-decoration-line-through">
+                        ${{ product.price }}
+                      </span>
+                      &nbsp;
+                      <span>${{ product.sale_price }}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="card-footer bg-transparent border-0 d-flex justify-content-center gap-2 pb-4 pt-0">
+                  <!-- Add to cart: kompatibel zum Footer-JS -->
+                  <button
+                    class="btn btn-outline-dark btn-icon add-to-cart"
+                    data-product-id="{{ product.id }}"
+                    data-add-url="{% url 'cart:add' %}"
+                    aria-label="Add {{ product.name }} to cart">
+                    <i class="bi-cart"></i>
+                  </button>
+
+                  <a class="btn btn-outline-dark btn-icon"
+                     href="{% url 'product' product.id %}"
+                     aria-label="View {{ product.name }}">
+                    <i class="bi-search"></i>
+                  </a>
+                </div>
+              </div>
+            </div>
+
+          {% else %}
+            <!-- Normale Karte -->
+            <div class="col">
+              <div class="card product-card h-100">
+                <img class="card-img-top" src="{{ product.image.url }}" alt="{{ product.name }}">
+
+                <div class="card-body p-4">
+                  <div class="text-center">
+                    <h5 class="fw-semibold mb-1">{{ product.name }}</h5>
+                    <div class="price-tag">${{ product.price }}</div>
+                  </div>
+                </div>
+
+                <div class="card-footer bg-transparent border-0 d-flex justify-content-center gap-2 pb-4 pt-0">
+                  <!-- Add to cart: kompatibel zum Footer-JS -->
+                  <button
+                    class="btn btn-outline-dark btn-icon add-to-cart"
+                    data-product-id="{{ product.id }}"
+                    data-add-url="{% url 'cart:add' %}"
+                    aria-label="Add {{ product.name }} to cart">
+                    <i class="bi-cart"></i>
+                  </button>
+
+                  <a class="btn btn-outline-dark btn-icon"
+                     href="{% url 'product' product.id %}"
+                     aria-label="View {{ product.name }}">
+                    <i class="bi-search"></i>
+                  </a>
+                </div>
+              </div>
+            </div>
+          {% endif %}
+        {% endfor %}
+
+      </div>
+    </div>
+  </section>
+
+{% endblock %}

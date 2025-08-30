@@ -1,0 +1,17 @@
+{# store/templates/cart/_mini_cart_footer.html #}
+
+{% if cart.get_prods %}
+  <div class="offcanvas-footer border-top p-3">
+
+
+    <div class="d-flex justify-content-between border-top pt-2 mt-2 fw-bold text-mode">
+      <span>Total</span>
+      <span>{{ totals|default:cart.cart_total|floatformat:2 }}</span>
+    </div>
+
+    <div class="pt-3">
+      <a class="btn btn-primary w-100" href="{% url 'checkout:checkout' %}">Continue to Checkout</a>
+
+    </div>
+  </div>
+{% endif %}

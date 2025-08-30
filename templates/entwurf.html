@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <meta name="description" content="Beautiful Django E-commerce storefront" />
+    <title>Django Ecommerce · Woodware</title>
+
+    <!-- Bootstrap 5 CSS -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      crossorigin="anonymous"
+    />
+
+    <!-- Bootstrap Icons -->
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
+    />
+
+    <!-- Inline CSS: keine Animationen -->
+    <style>
+      :root {
+        --brand: #4f46e5; /* indigo-600 */
+        --brand-2: #22d3ee; /* cyan-400 */
+        --ink: #0f172a;     /* slate-900 */
+        --bg: #f8fafc;
+        --muted: #6b7280;
+        --border: rgba(15, 23, 42, 0.08);
+      }
+
+      body { background-color: var(--bg); color: var(--ink); }
+
+      /* Navbar */
+      .navbar {
+        background: rgba(255, 255, 255, 0.9) !important;
+        border-bottom: 1px solid var(--border);
+      }
+      .navbar .btn { border-radius: 999px; }
+
+      /* Hero (ohne Animation) */
+      .hero {
+        position: relative;
+        background:
+          radial-gradient(1200px 400px at 10% -10%, rgba(79, 70, 229, 0.25), transparent),
+          radial-gradient(900px 300px at 90% -20%, rgba(34, 211, 238, 0.25), transparent),
+          linear-gradient(180deg, #0b1020 0%, #111827 100%);
+        color: #fff;
+        overflow: hidden;
+      }
+      .hero .badge-soft {
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        padding: 0.5rem 0.75rem;
+        border-radius: 999px;
+        font-size: 0.875rem;
+      }
+
+      /* Cards */
+      .product-card {
+        border: 0;
+        border-radius: 1rem;
+        box-shadow: 0 10px 30px rgba(2, 8, 20, 0.06);
+        transition: box-shadow .2s ease, transform .2s ease;
+        background: #fff;
+        overflow: hidden;
+      }
+      .product-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 14px 38px rgba(2, 8, 20, 0.12);
+      }
+      .product-card .card-img-top {
+        height: 220px;
+        object-fit: cover;
+      }
+      .price-tag { font-weight: 700; letter-spacing: .2px; }
+      .btn-icon { width: 42px; height: 42px; display: inline-flex; align-items: center; justify-content: center; border-radius: 999px; }
+
+      /* Offcanvas Cart */
+      .offcanvas { --bs-offcanvas-width: min(420px, 92vw); }
+      .offcanvas-header { background: #fff; }
+      .offcanvas-body { background: #f9fafb; }
+      .mini-line { border-top: 1px dashed var(--border); }
+      .qty-group .btn { width: 34px; }
+
+      /* Footer */
+      footer { border-top: 1px solid var(--border); }
+    </style>
+  </head>
+  <body>
+    <!-- NAVBAR -->
+    <nav class="navbar navbar-expand-lg sticky-top navbar-light">
+      <div class="container py-2">
+        <a class="navbar-brand d-flex align-items-center gap-2" href="/">
+          <img src="/static/img/logo.png" alt="Logo" style="height:40px" />
+          <span class="fw-semibold text-dark">Woodware</span>
+        </a>
+
+        <button
+          class="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navbarSupportedContent"
+          aria-controls="navbarSupportedContent"
+          aria-expanded="false"
+          aria-label="Toggle navigation"
+        >
+          <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+          <ul class="navbar-nav me-auto ms-lg-4 gap-lg-2">
+            <!-- optional: Kategorien -->
+          </ul>
+
+          <ul class="navbar-nav ms-auto align-items-center gap-2">
+            <li class="nav-item d-none d-lg-block">
+              <a class="btn btn-outline-primary px-3" href="/accounts/login/?next=/">
+                <i class="bi-box-arrow-in-right me-2"></i> Login
+              </a>
+            </li>
+            <li class="nav-item">
+              <a
+                class="btn btn-outline-dark position-relative px-3"
+                data-bs-toggle="offcanvas"
+                href="#offcanvasCart"
+                role="button"
+                aria-controls="offcanvasCart"
+              >
+                <i class="bi-cart me-2"></i> Cart
+                <span
+                  class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-dark text-white"
+                  id="cart_quantity"
+                  aria-label="Items in cart"
+                >
+                  4
+                </span>
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <!-- OFFCANVAS CART -->
+    <div
+      class="offcanvas offcanvas-end"
+      id="offcanvasCart"
+      tabindex="-1"
+      aria-labelledby="offcanvasCartLabel"
+      role="dialog"
+    >
+      <div class="offcanvas-header border-bottom">
+        <h6 class="offcanvas-title" id="offcanvasCartLabel">
+          Your Cart <span class="text-muted">(<span id="mini-cart-count">4</span>)</span>
+        </h6>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+      </div>
+
+      <div id="mini-cart-body" class="offcanvas-body">
+        <!-- Cart Item 1 -->
+        <div class="card mb-3 product-line product-1">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center">
+              <div class="d-flex align-items-center">
+                <img
+                  src="/media/uploads/product/1_srK3sxp.jpg"
+                  alt="Product 1"
+                  class="img-fluid rounded-2"
+                  style="width:65px;height:65px;object-fit:cover"
+                />
+                <div class="ms-3">
+                  <h6 class="mb-1">Product 1</h6>
+                  <div class="d-flex align-items-center gap-2 qty-group">
+                    <span class="small text-muted">Qty</span>
+                    <div class="input-group input-group-sm" style="width: 120px">
+                      <button class="btn btn-outline-secondary qty-minus" type="button" data-index="1" data-update-url="/cart/update/">−</button>
+                      <input
+                        type="number"
+                        min="1"
+                        max="10"
+                        step="1"
+                        class="form-control text-center qty-input"
+                        data-index="1"
+                        data-update-url="/cart/update/"
+                        value="1"
+                        aria-label="Quantity for Product 1"
+                      />
+                      <button class="btn btn-outline-secondary qty-plus" type="button" data-index="1" data-update-url="/cart/update/">+</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="d-flex align-items-center">
+                <div class="text-end me-2" style="width:90px">
+                  <div class="small text-muted">Price</div>
+                  <div class="fw-semibold">€30.00</div>
+                </div>
+                <button
+                  type="button"
+                  class="btn btn-link p-0 ms-2 text-danger delete-product"
+                  title="Remove"
+                  data-index="1"
+                  data-delete-url="/cart/delete/"
+                  aria-label="Remove Product 1"
+                >
+                  <i class="bi-trash fs-5"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Cart Item 2 -->
+        <div class="card mb-3 product-line product-2">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center">
+              <div class="d-flex align-items-center">
+                <img
+                  src="/media/uploads/product/2_pPDzhQ6.jpg"
+                  alt="Product 2"
+                  class="img-fluid rounded-2"
+                  style="width:65px;height:65px;object-fit:cover"
+                />
+                <div class="ms-3">
+                  <h6 class="mb-1">Product 2</h6>
+                  <div class="d-flex align-items-center gap-2 qty-group">
+                    <span class="small text-muted">Qty</span>
+                    <div class="input-group input-group-sm" style="width: 120px">
+                      <button class="btn btn-outline-secondary qty-minus" type="button" data-index="2" data-update-url="/cart/update/">−</button>
+                      <input
+                        type="number"
+                        min="1"
+                        max="10"
+                        step="1"
+                        class="form-control text-center qty-input"
+                        data-index="2"
+                        data-update-url="/cart/update/"
+                        value="3"
+                        aria-label="Quantity for Product 2"
+                      />
+                      <button class="btn btn-outline-secondary qty-plus" type="button" data-index="2" data-update-url="/cart/update/">+</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="d-flex align-items-center">
+                <div class="text-end me-2" style="width:90px">
+                  <div class="small text-muted">Price</div>
+                  <div class="fw-semibold">€23.00</div>
+                </div>
+                <button
+                  type="button"
+                  class="btn btn-link p-0 ms-2 text-danger delete-product"
+                  title="Remove"
+                  data-index="2"
+                  data-delete-url="/cart/delete/"
+                  aria-label="Remove Product 2"
+                >
+                  <i class="bi-trash fs-5"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="mini-cart-footer" class="border-top">
+        <div class="p-3">
+          <div class="d-flex justify-content-between mini-line pt-2 mt-1 fw-bold">
+            <span>Total</span>
+            <span>€99.00</span>
+          </div>
+          <div class="pt-3">
+            <a class="btn btn-primary w-100" href="/checkout/checkout/">Continue to Checkout</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- HERO -->
+    <header class="hero py-5">
+      <div class="container py-5">
+        <div class="text-center text-white">
+          <span class="badge-soft d-inline-flex align-items-center gap-2 mb-3">
+            <i class="bi-leaf"></i>
+            Crafted wood goods
+          </span>
+          <h1 class="display-4 fw-bold">Woodware</h1>
+          <p class="lead text-white-50 mb-4">Hand-picked pieces for your home & studio</p>
+          <a href="#catalog" class="btn btn-light btn-lg px-4 rounded-pill">
+            <i class="bi-shop me-2"></i> Shop now
+          </a>
+        </div>
+      </div>
+    </header>
+
+    <!-- CATALOG -->
+    <section id="catalog" class="py-5">
+      <div class="container">
+        <div class="d-flex justify-content-between align-items-end mb-4">
+          <div>
+            <h2 class="h4 mb-1">Featured products</h2>
+            <p class="text-muted mb-0">Fresh arrivals, lovingly made</p>
+          </div>
+          <div class="d-none d-md-flex gap-2">
+            <button class="btn btn-outline-secondary btn-sm">Newest</button>
+            <button class="btn btn-outline-secondary btn-sm">Popular</button>
+            <button class="btn btn-outline-secondary btn-sm">Price</button>
+          </div>
+        </div>
+
+        <div class="row g-4 row-cols-2 row-cols-md-3 row-cols-xl-4">
+          <!-- PRODUCT CARD TEMPLATE (repeat) -->
+          <div class="col">
+            <div class="card product-card h-100">
+              <img class="card-img-top" src="/media/uploads/product/1_srK3sxp.jpg" alt="Product 1" />
+              <div class="card-body text-center">
+                <h5 class="fw-semibold mb-1">Product 1</h5>
+                <div class="price-tag">€30.00</div>
+              </div>
+              <div class="card-footer bg-transparent border-0 d-flex justify-content-center gap-2 pb-4 pt-0">
+                <button
+                  class="btn btn-outline-dark btn-icon add-to-cart"
+                  data-product-id="1"
+                  data-add-url="/cart/add/"
+                  aria-label="Add Product 1 to cart"
+                >
+                  <i class="bi-cart"></i>
+                </button>
+                <a class="btn btn-outline-dark btn-icon" href="/product/1" aria-label="View Product 1">
+                  <i class="bi-search"></i>
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <div class="col">
+            <div class="card product-card h-100">
+              <img class="card-img-top" src="/media/uploads/product/2_pPDzhQ6.jpg" alt="Product 2" />
+              <div class="card-body text-center">
+                <h5 class="fw-semibold mb-1">Product 2</h5>
+                <div class="price-tag">€23.00</div>
+              </div>
+              <div class="card-footer bg-transparent border-0 d-flex justify-content-center gap-2 pb-4 pt-0">
+                <button class="btn btn-outline-dark btn-icon add-to-cart" data-product-id="2" data-add-url="/cart/add/" aria-label="Add Product 2 to cart">
+                  <i class="bi-cart"></i>
+                </button>
+                <a class="btn btn-outline-dark btn-icon" href="/product/2" aria-label="View Product 2">
+                  <i class="bi-search"></i>
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <div class="col">
+            <div class="card product-card h-100">
+              <img class="card-img-top" src="/media/uploads/product/3_2Dsyf9C.jpg" alt="Product 3" />
+              <div class="card-body text-center">
+                <h5 class="fw-semibold mb-1">Product 3</h5>
+                <div class="price-tag">€57.00</div>
+              </div>
+              <div class="card-footer bg-transparent border-0 d-flex justify-content-center gap-2 pb-4 pt-0">
+                <button class="btn btn-outline-dark btn-icon add-to-cart" data-product-id="3" data-add-url="/cart/add/" aria-label="Add Product 3 to cart">
+                  <i class="bi-cart"></i>
+                </button>
+                <a class="btn btn-outline-dark btn-icon" href="/product/3" aria-label="View Product 3">
+                  <i class="bi-search"></i>
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <div class="col">
+            <div class="card product-card h-100">
+              <img class="card-img-top" src="/media/uploads/product/4_s9emeJt.jpg" alt="Product 4" />
+              <div class="card-body text-center">
+                <h5 class="fw-semibold mb-1">Product 4</h5>
+                <div class="price-tag">€55.00</div>
+              </div>
+              <div class="card-footer bg-transparent border-0 d-flex justify-content-center gap-2 pb-4 pt-0">
+                <button class="btn btn-outline-dark btn-icon add-to-cart" data-product-id="4" data-add-url="/cart/add/" aria-label="Add Product 4 to cart">
+                  <i class="bi-cart"></i>
+                </button>
+                <a class="btn btn-outline-dark btn-icon" href="/product/4" aria-label="View Product 4">
+                  <i class="bi-search"></i>
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <div class="col">
+            <div class="card product-card h-100">
+              <img class="card-img-top" src="/media/uploads/product/5_sqGvXWY.jpg" alt="Product 5" />
+              <div class="card-body text-center">
+                <h5 class="fw-semibold mb-1">Product 5</h5>
+                <div class="price-tag">€66.00</div>
+              </div>
+              <div class="card-footer bg-transparent border-0 d-flex justify-content-center gap-2 pb-4 pt-0">
+                <button class="btn btn-outline-dark btn-icon add-to-cart" data-product-id="5" data-add-url="/cart/add/" aria-label="Add Product 5 to cart">
+                  <i class="bi-cart"></i>
+                </button>
+                <a class="btn btn-outline-dark btn-icon" href="/product/5" aria-label="View Product 5">
+                  <i class="bi-search"></i>
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <div class="col">
+            <div class="card product-card h-100">
+              <img class="card-img-top" src="/media/uploads/product/6_wKbYh8n.jpg" alt="Product 6" />
+              <div class="card-body text-center">
+                <h5 class="fw-semibold mb-1">Product 6</h5>
+                <div class="price-tag">€56.00</div>
+              </div>
+              <div class="card-footer bg-transparent border-0 d-flex justify-content-center gap-2 pb-4 pt-0">
+                <button class="btn btn-outline-dark btn-icon add-to-cart" data-product-id="6" data-add-url="/cart/add/" aria-label="Add Product 6 to cart">
+                  <i class="bi-cart"></i>
+                </button>
+                <a class="btn btn-outline-dark btn-icon" href="/product/6" aria-label="View Product 6">
+                  <i class="bi-search"></i>
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <div class="col">
+            <div class="card product-card h-100">
+              <img class="card-img-top" src="/media/uploads/product/7_uD1JQpy.jpg" alt="Product 7" />
+              <div class="card-body text-center">
+                <h5 class="fw-semibold mb-1">Product 7</h5>
+                <div class="price-tag">€88.00</div>
+              </div>
+              <div class="card-footer bg-transparent border-0 d-flex justify-content-center gap-2 pb-4 pt-0">
+                <button class="btn btn-outline-dark btn-icon add-to-cart" data-product-id="7" data-add-url="/cart/add/" aria-label="Add Product 7 to cart">
+                  <i class="bi-cart"></i>
+                </button>
+                <a class="btn btn-outline-dark btn-icon" href="/product/7" aria-label="View Product 7">
+                  <i class="bi-search"></i>
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <div class="col">
+            <div class="card product-card h-100">
+              <img class="card-img-top" src="/media/uploads/product/9_5zE90zu.jpg" alt="Product 8" />
+              <div class="card-body text-center">
+                <h5 class="fw-semibold mb-1">Product 8</h5>
+                <div class="price-tag">€77.00</div>
+              </div>
+              <div class="card-footer bg-transparent border-0 d-flex justify-content-center gap-2 pb-4 pt-0">
+                <button class="btn btn-outline-dark btn-icon add-to-cart" data-product-id="8" data-add-url="/cart/add/" aria-label="Add Product 8 to cart">
+                  <i class="bi-cart"></i>
+                </button>
+                <a class="btn btn-outline-dark btn-icon" href="/product/8" aria-label="View Product 8">
+                  <i class="bi-search"></i>
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <div class="col">
+            <div class="card product-card h-100">
+              <img class="card-img-top" src="/media/uploads/product/10_PbbrOAT.jpg" alt="Product 9" />
+              <div class="card-body text-center">
+                <h5 class="fw-semibold mb-1">Product 9</h5>
+                <div class="price-tag">€87.00</div>
+              </div>
+              <div class="card-footer bg-transparent border-0 d-flex justify-content-center gap-2 pb-4 pt-0">
+                <button class="btn btn-outline-dark btn-icon add-to-cart" data-product-id="9" data-add-url="/cart/add/" aria-label="Add Product 9 to cart">
+                  <i class="bi-cart"></i>
+                </button>
+                <a class="btn btn-outline-dark btn-icon" href="/product/9" aria-label="View Product 9">
+                  <i class="bi-search"></i>
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <div class="col">
+            <div class="card product-card h-100">
+              <img class="card-img-top" src="/media/uploads/product/11_10lJJiT.jpg" alt="Product 10" />
+              <div class="card-body text-center">
+                <h5 class="fw-semibold mb-1">Product 10</h5>
+                <div class="price-tag">€13.00</div>
+              </div>
+              <div class="card-footer bg-transparent border-0 d-flex justify-content-center gap-2 pb-4 pt-0">
+                <button class="btn btn-outline-dark btn-icon add-to-cart" data-product-id="10" data-add-url="/cart/add/" aria-label="Add Product 10 to cart">
+                  <i class="bi-cart"></i>
+                </button>
+                <a class="btn btn-outline-dark btn-icon" href="/product/10" aria-label="View Product 10">
+                  <i class="bi-search"></i>
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <div class="col">
+            <div class="card product-card h-100">
+              <img class="card-img-top" src="/media/uploads/product/12_vMGya3z.jpg" alt="Product 11" />
+              <div class="card-body text-center">
+                <h5 class="fw-semibold mb-1">Product 11</h5>
+                <div class="price-tag">€34.00</div>
+              </div>
+              <div class="card-footer bg-transparent border-0 d-flex justify-content-center gap-2 pb-4 pt-0">
+                <button class="btn btn-outline-dark btn-icon add-to-cart" data-product-id="11" data-add-url="/cart/add/" aria-label="Add Product 11 to cart">
+                  <i class="bi-cart"></i>
+                </button>
+                <a class="btn btn-outline-dark btn-icon" href="/product/11" aria-label="View Product 11">
+                  <i class="bi-search"></i>
+                </a>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="py-4 bg-white">
+      <div class="container">
+        <p class="m-0 text-center text-muted">© DC 2023 · Woodware</p>
+      </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+    <!-- Optional: deine eigenen Scripts -->
+    <script src="/static/js/scripts.js?v=3"></script>
+  </body>
+</html>

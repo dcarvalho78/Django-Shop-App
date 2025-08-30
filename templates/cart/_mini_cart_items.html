@@ -1,0 +1,72 @@
+{% with prods=cart.get_prods quants=cart.get_quants %}
+  {% if prods %}
+    {% for product in prods %}
+      <div class="card cart-item mb-3 shadow-sm" data-product-id="{{ product.id }}">
+        <div class="card-body py-3">
+          <div class="d-flex justify-content-between align-items-center">
+
+            <!-- Links: Bild + Titel + Menge -->
+            <div class="d-flex align-items-center">
+              <img src="{{ product.image.url }}" alt="{{ product.name }}"
+                   class="cart-item-img rounded">
+              <div class="ms-3">
+                <h6 class="mb-1">{{ product.name }}</h6>
+                <div class="d-flex align-items-center gap-2">
+                  <span class="small text-muted">Qty:</span>
+                  <div class="input-group input-group-sm cart-qty-group">
+                    <button class="btn btn-outline-secondary qty-minus"
+                            type="button"
+                            data-index="{{ product.id }}"
+                            data-update-url="{% url 'cart:update' %}">
+                      <i class="bi-dash"></i>
+                    </button>
+
+                    <input type="number"
+                           min="1" max="10" step="1"
+                           class="form-control text-center qty-input no-spinner"
+                           data-index="{{ product.id }}"
+                           data-update-url="{% url 'cart:update' %}"
+                           value="{% for pid,q in quants.items %}{% if pid|stringformat:'s' == product.id|stringformat:'s' %}{{ q }}{% endif %}{% endfor %}">
+
+                    <button class="btn btn-outline-secondary qty-plus"
+                            type="button"
+                            data-index="{{ product.id }}"
+                            data-update-url="{% url 'cart:update' %}">
+                      <i class="bi-plus"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Rechts: Preis + Löschen -->
+            <div class="d-flex align-items-center">
+              <div class="text-end me-3 cart-price">
+                <div class="small text-muted">Price</div>
+                <div class="fw-semibold">
+                  {% if product.is_sale %}
+                    {{ product.sale_price }}
+                  {% else %}
+                    {{ product.price }}
+                  {% endif %}
+                </div>
+              </div>
+
+              <button type="button"
+                      class="btn btn-link text-danger p-0 ms-2 delete-product"
+                      data-index="{{ product.id }}"
+                      data-delete-url="{% url 'cart:delete' %}"
+                      title="Remove">
+                <i class="bi-trash" style="font-size:1.1rem;"></i>
+              </button>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  {% else %}
+    <p class="text-center mb-0 text-muted">Your cart is empty.</p>
+  {% endif %}
+{% endwith %}
+

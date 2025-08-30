@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+{% block title %}My Orders{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <h3 class="mb-4">My Orders</h3>
+
+  {% if orders %}
+    <div class="table-responsive">
+      <table class="table align-middle">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Date</th>
+            <th>Status</th>
+            <th>Shipped</th>
+            <th>Amount</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+        {% for o in orders %}
+          <tr>
+            <td>{{ o.id }}</td>
+            <td>{{ o.date_ordered|date:"Y-m-d H:i" }}</td>
+            <td>{{ o.get_status_display|default:o.status }}</td>
+            <td>
+              {% if o.shipped %}
+                Yes ({{ o.date_shipped|date:"Y-m-d" }})
+              {% else %}
+                No
+              {% endif %}
+            </td>
+            <td>{{ o.amount_paid }}</td>
+            <td>
+              <a class="btn btn-sm btn-outline-secondary"
+                 href="{% url 'checkout:my_order_detail' o.id %}">Details</a>
+            </td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="alert alert-info">You don’t have any orders yet.</div>
+  {% endif %}
+</div>
+{% endblock %}
