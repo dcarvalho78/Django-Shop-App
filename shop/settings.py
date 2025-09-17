@@ -3,7 +3,7 @@ import os
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = 'django-insecure-+64kn9qjz4y-7u)+$j#w0gcwe-j8elkr74w=xvpqy3hz-r2q+^'
+SECRET_KEY = "django-insecure-+64kn9qjz4y-7u)+$j#w0gcwe-j8elkr74w=xvpqy3hz-r2q+^"
 DEBUG = True
 ALLOWED_HOSTS = ["127.0.0.1", "localhost"]
 
@@ -14,6 +14,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    # eigene Apps
     "store",
     "cart",
     "checkout",
@@ -34,11 +35,7 @@ ROOT_URLCONF = "shop.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        # Suche zuerst in einem globalen templates-Ordner und in store/templates
-        "DIRS": [
-            BASE_DIR / "templates",
-    
-        ],
+        "DIRS": [BASE_DIR / "templates"],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -54,10 +51,15 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "shop.wsgi.application"
 
+# 🔑 Postgres-DB-Konfiguration
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": "shop_db",                      
+        "USER": "shop_user",                    
+        "PASSWORD": "NeuesSicheresPasswort",    # Passwort hier fest eingetragen
+        "HOST": "127.0.0.1",                    
+        "PORT": "5432",                         
     }
 }
 
@@ -73,7 +75,6 @@ TIME_ZONE = "UTC"
 USE_I18N = True
 USE_TZ = True
 
-# WICHTIG: führender Slash
 STATIC_URL = "/static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
 
@@ -82,19 +83,22 @@ MEDIA_ROOT = BASE_DIR / "media"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-# Login/Logout Redirects — sorgt dafür, dass du nach erfolgreichem Login/Logout auf Home landest
+# Login/Logout Redirects
 LOGIN_REDIRECT_URL = "/"
-LOGOUT_REDIRECT_URL = '/'
+LOGOUT_REDIRECT_URL = "/"
 
-# settings.py
 AUTHENTICATION_BACKENDS = [
-    'accounts.backends.EmailOrUsernameBackend',  # Name passt jetzt zur Klasse
-    'django.contrib.auth.backends.ModelBackend',
+    "accounts.backends.EmailOrUsernameBackend",
+    "django.contrib.auth.backends.ModelBackend",
 ]
 
-
 LOGGING = {
-    'version': 1,
-    'handlers': {'console': {'class': 'logging.StreamHandler'}},
-    'loggers': {'django.contrib.auth': {'handlers': ['console'], 'level': 'DEBUG'}},
+    "version": 1,
+    "handlers": {"console": {"class": "logging.StreamHandler"}},
+    "loggers": {
+        "django.contrib.auth": {
+            "handlers": ["console"],
+            "level": "DEBUG",
+        }
+    },
 }

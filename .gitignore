@@ -1,14 +1,27 @@
-# Node.js
-node_modules/
-.env
-npm-debug.log
-
+@'
 # Python
 __pycache__/
-*.pyc
+*.py[cod]
+*.pyo
+
+# Virtual env
+.venv/
 venv/
 
-# Allgemein
-.DS_Store
+# Django
+db.sqlite3
+media/
 *.log
-/dist
+
+# Local config
+.env
+.env.*
+
+# Fixtures / temp
+data*.json
+reset.sql
+
+# OS
+.DS_Store
+Thumbs.db
+'@ | Out-File -Encoding utf8 .gitignore
