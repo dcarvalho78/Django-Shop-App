@@ -1,4 +1,5 @@
 # render.yaml – Infrastruktur als Code (Webservice + Postgres)
+
 databases:
   - name: shop-db
     plan: free
