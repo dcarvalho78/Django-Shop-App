@@ -4,15 +4,19 @@ import dj_database_url
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# 🔑 Sicherheit über Environment Variables
+# 🔑 Secret Key
 SECRET_KEY = os.environ.get(
-    "SECRET_KEY", "django-insecure-+64kn9qjz4y-7u)+$j#w0gcwe-j8elkr74w=xvpqy3hz-r2q+^"
+    "SECRET_KEY",
+    "django-insecure-+64kn9qjz4y-7u)+$j#w0gcwe-j8elkr74w=xvpqy3hz-r2q+^",  # nur fallback für lokal
 )
 
-DEBUG = os.environ.get("DEBUG", "True") == "True"
+# 🐞 Debug
+DEBUG = os.environ.get("DEBUG", "False") == "True"
 
+# 🌍 Allowed Hosts
 ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "127.0.0.1,localhost").split(",")
 
+# 📦 Installed Apps
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
@@ -26,8 +30,10 @@ INSTALLED_APPS = [
     "checkout",
 ]
 
+# ⚙️ Middleware
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",  # für static files in Production
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -38,6 +44,7 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = "shop.urls"
 
+# 🎨 Templates
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
@@ -57,14 +64,15 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "shop.wsgi.application"
 
-# 🗄️ Datenbank: lokal Postgres, auf Render DATABASE_URL
+# 🗄️ Database
 DATABASES = {
     "default": dj_database_url.config(
-        default=f"postgresql://shop_user:NeuesSicheresPasswort@127.0.0.1:5432/shop_db",
+        default="postgresql://shop_user:NeuesSicheresPasswort@127.0.0.1:5432/shop_db",
         conn_max_age=600,
     )
 }
 
+# 🔒 Password Validators
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
     {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
@@ -72,39 +80,43 @@ AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
 
+# 🌐 Internationalization
 LANGUAGE_CODE = "en-us"
 TIME_ZONE = "UTC"
 USE_I18N = True
 USE_TZ = True
 
-# 📂 Static & Media
+# 🖼️ Static & Media
 STATIC_URL = "/static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
-STATIC_ROOT = BASE_DIR / "staticfiles"  # wichtig für collectstatic auf Render
+STATIC_ROOT = BASE_DIR / "staticfiles"
+
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
+# 🗂️ Default PK
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-# 🔑 Login/Logout Redirects
+# 🔐 Auth
 LOGIN_REDIRECT_URL = "/"
 LOGOUT_REDIRECT_URL = "/"
 
-# ⚙️ Auth Backends
 AUTHENTICATION_BACKENDS = [
     "accounts.backends.EmailOrUsernameBackend",
     "django.contrib.auth.backends.ModelBackend",
 ]
 
-# 📝 Logging
+# 📜 Logging
 LOGGING = {
     "version": 1,
-    "handlers": {"console": {"class": "logging.StreamHandler"}},
-    "loggers": {
-        "django.contrib.auth": {
-            "handlers": ["console"],
-            "level": "DEBUG",
-        }
+    "disable_existing_loggers": False,
+    "handlers": {
+        "console": {"class": "logging.StreamHandler"},
+    },
+    "root": {
+        "handlers": ["console"],
+        "level": "INFO",  # auf DEBUG setzen, wenn du mehr Logs brauchst
     },
 }
