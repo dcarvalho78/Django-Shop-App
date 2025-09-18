@@ -8,10 +8,10 @@ services:
   - type: web
     name: django-shop
     plan: free
-    runtime: python
+    env: python
     region: frankfurt
     buildCommand: "./build.sh"
-    startCommand: "python -m gunicorn shop.asgi:application -k uvicorn.workers.UvicornWorker --timeout 120 --log-file -"
+    startCommand: "gunicorn shop.asgi:application -k uvicorn.workers.UvicornWorker --timeout 120 --log-file -"
     autoDeploy: true
     envVars:
       - key: DATABASE_URL
