@@ -1,28 +1,14 @@
 from pathlib import Path
 import os
-import dj_database_url  # Render/12factor DB parsing
+import dj_database_url  # wichtig für Render
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Geheimnis aus ENV (Render setzt SECRET_KEY), lokal fallback auf bisherigen Wert
-SECRET_KEY = os.getenv(
-    "SECRET_KEY",
-    "django-insecure-+64kn9qjz4y-7u)+$j#w0gcwe-j8elkr74w=xvpqy3hz-r2q+^",
+SECRET_KEY = os.environ.get(
+    "SECRET_KEY", "django-insecure-+64kn9qjz4y-7u)+$j#w0gcwe-j8elkr74w=xvpqy3hz-r2q+^"
 )
-
-# DEBUG per ENV steuerbar (DEBUG=true), sonst False
-DEBUG = os.getenv("DEBUG", "False").lower() in ("1", "true", "t", "yes", "y")
-
-# Hosts: lokal + Render
-ALLOWED_HOSTS = ["127.0.0.1", "localhost"]
-RENDER_HOST = os.getenv("RENDER_EXTERNAL_HOSTNAME")
-if RENDER_HOST:
-    ALLOWED_HOSTS.append(RENDER_HOST)
-
-# Für CSRF auf Render: https://<render-host>
-CSRF_TRUSTED_ORIGINS = []
-if RENDER_HOST:
-    CSRF_TRUSTED_ORIGINS.append(f"https://{RENDER_HOST}")
+DEBUG = os.environ.get("DEBUG", "False") == "True"
+ALLOWED_HOSTS = ["127.0.0.1", "localhost", ".onrender.com"]
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -39,7 +25,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
-    "whitenoise.middleware.WhiteNoiseMiddleware",  # Static Files in Prod
+    "whitenoise.middleware.WhiteNoiseMiddleware",  # wichtig für Render
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -47,10 +33,6 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
-
-# Für korrektes HTTPS hinter Proxy (Render)
-SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
-USE_X_FORWARDED_HOST = True
 
 ROOT_URLCONF = "shop.urls"
 
@@ -71,13 +53,15 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = "shop.wsgi.application"  # passt für Gunicorn/Render
+WSGI_APPLICATION = "shop.wsgi.application"
+ASGI_APPLICATION = "shop.asgi.application"
 
-# Datenbank: Render via DATABASE_URL, lokal Fallback auf deine PG-Instanz
+# ✅ Datenbank über DATABASE_URL von Render
 DATABASES = {
     "default": dj_database_url.config(
-        default="postgresql://shop_user:NeuesSicheresPasswort@127.0.0.1:5432/shop_db",
+        default="postgresql://shop_user:password@localhost:5432/shop_db",
         conn_max_age=600,
+        ssl_require=True,
     )
 }
 
@@ -93,19 +77,9 @@ TIME_ZONE = "UTC"
 USE_I18N = True
 USE_TZ = True
 
-# Static/Media
 STATIC_URL = "/static/"
-STATICFILES_DIRS = [BASE_DIR / "static"]  # deine Entwicklungs-Assets
-
-if not DEBUG:
-    STATIC_ROOT = BASE_DIR / "staticfiles"  # Render sammelt hier Datei-Assets
-    # Django ≥4.2: STORAGES statt STATICFILES_STORAGE
-    STORAGES = {
-        "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
-        "staticfiles": {
-            "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"
-        },
-    }
+STATICFILES_DIRS = [BASE_DIR / "static"]
+STATIC_ROOT = BASE_DIR / "staticfiles"
 
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
@@ -124,5 +98,10 @@ AUTHENTICATION_BACKENDS = [
 LOGGING = {
     "version": 1,
     "handlers": {"console": {"class": "logging.StreamHandler"}},
-    "loggers": {"django.contrib.auth": {"handlers": ["console"], "level": "DEBUG"}},
+    "loggers": {
+        "django.contrib.auth": {
+            "handlers": ["console"],
+            "level": "DEBUG",
+        }
+    },
 }
