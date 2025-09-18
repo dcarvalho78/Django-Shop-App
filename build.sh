@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
 set -o errexit
 
+# Installiere Abhängigkeiten
 pip install -r requirements.txt
 
-# Static Assets sammeln (für WhiteNoise)
+# Sammle statische Dateien für WhiteNoise
 python manage.py collectstatic --no-input
 
-# DB-Struktur anwenden
+# Führe Datenbankmigrationen aus
 python manage.py migrate
