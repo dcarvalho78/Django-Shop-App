@@ -7,8 +7,8 @@ databases:
 services:
   - type: web
     name: django-shop
+    env: python
     plan: free
-    runtime: python
     region: frankfurt
     buildCommand: "./build.sh"
     startCommand: "gunicorn shop.asgi:application -k uvicorn.workers.UvicornWorker --timeout 120 --log-file -"
